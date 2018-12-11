@@ -1,8 +1,5 @@
 package com.noodles.util;
 
-import com.noodles.Agent;
-
-import java.util.ArrayList;
 import java.util.Random;
 
 public class DataGene {

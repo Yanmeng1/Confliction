@@ -2,12 +2,12 @@ package com.noodles.util;
 
 public class Config {
 
-    public final static int ITERATOR_NUMBER = 100;
+    public final static int ITERATOR_NUMBER = 1000;
     public final static int SIZE = 40;
 
     public final static double GDP = 0.08;
     /** 随机数变异系数 **/
-    public final static double CV = 0.2;
+    public final static double CV = 0.02;
     public final static double ASSET = 50.0;
 
     /** 财富值转换量 **/
@@ -47,7 +47,7 @@ public class Config {
     /** 政府有效镇压因子 **/
     public final static double FACTOR_GOVERNMENT = 0.8;
     /** 敌对势力诱导因子 **/
-    public final static double FACTOR_OPPONENT = 0.2;
+    public final static double FACTOR_OPPONENT = 0.01;
     /** 每一次暴乱敌对势力诱导因子的增长幅度，每一次镇压政府镇压有效因子敌对势力诱导因子的减小幅度 **/
     public final static double FACTOR_OPPONENT_TRANSFER = 0.05;
 

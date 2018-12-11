@@ -1,5 +1,6 @@
 package com.noodles;
 
+import com.noodles.util.Config;
 import com.noodles.util.VisUtil;
 
 import javax.swing.*;
@@ -7,11 +8,11 @@ import java.awt.*;
 
 public class ConflictFrame extends JFrame {
 
-    private int canvasWidth;
-    private int canvasHeight;
+    private double canvasWidth;
+    private double canvasHeight;
     private ConflictModel model;
 
-    public ConflictFrame(String title, int canvasWidth, int canvasHeight) {
+    public ConflictFrame(String title, double canvasWidth, double canvasHeight) {
         super(title);
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -19,6 +20,7 @@ public class ConflictFrame extends JFrame {
         ConCanvas canvas = new ConCanvas();
         setContentPane(canvas);
         pack();
+
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
@@ -33,8 +35,8 @@ public class ConflictFrame extends JFrame {
         repaint();
     }
 
-    public int getCanvasWidth() {return canvasWidth;}
-    public int getCanvasHeight() {return canvasHeight;}
+    public double getCanvasWidth() {return canvasWidth;}
+    public double getCanvasHeight() {return canvasHeight;}
 
     private class ConCanvas extends JPanel {
         public ConCanvas() {
@@ -55,33 +57,44 @@ public class ConflictFrame extends JFrame {
             double[][] state = model.getCurrentState();
 
             double squareHeight = canvasHeight / model.getRows();
-            double squareWidth = canvasWidth / (model.getColumns() * 2);
+            double squareWidth = canvasWidth / ((model.getColumns() * 2));
 
             for (int i = 0; i < model.getRows(); i++) {
-                for (int j = 0; j < model.getColumns() * 2; j ++) {
-                    int alpha = (int) ((1 - state[i][j]) * 255);
-                    if (alpha < 0) alpha = 0;
-                    if (alpha > 255) alpha = 255;
-                    g2d.setColor(new Color(161, 23, 21, alpha));
-
-                    VisUtil.fillRectangle(g2d, i * squareHeight, j * squareWidth, squareWidth, squareHeight);
-//                    g2d.setColor(new Color(0, 139, 69, alpha));
-//                    VisUtil.fillRectangle(g2d, i * squareHeight, (j + model.getColumns()) * squareWidth, squareWidth, squareHeight);
-//                    if (j > model.getColumns()) System.out.print(state[i][i] + " ");
+                for (int j = 0; j < model.getColumns(); j ++) {
+                    if (state[i][j] < 0) {
+                        g2d.setColor(VisUtil.Black);
+                    } else {
+                        int alpha = 255;
+                        if (state[i][j] < Config.DISSATISFY_THRESHOLD) {
+                            double lower2One = state[i][j] / Config.DISSATISFY_THRESHOLD;
+                            alpha = (int)((1 - lower2One) * 255);
+                            g2d.setColor(new Color(0, 139, 69, alpha));
+                        } else {
+                            double higher2One = (state[i][j] - Config.DISSATISFY_THRESHOLD) / (1 - Config.DISSATISFY_THRESHOLD);
+                            alpha = (int)(higher2One * 255);
+                            g2d.setColor(new Color(161, 23, 21, alpha));
+                        }
+                    }
+                    VisUtil.fillRectangle(g2d, j * squareWidth, i * squareHeight, squareWidth, squareHeight);
                 }
-                System.out.println();
             }
-            VisUtil.drawText(g2d, String.valueOf(model.getRows()), canvasWidth / 4, canvasHeight / 4);
-            VisUtil.drawText(g2d, String.valueOf(model.getColumns() * 2), canvasWidth * 3 / 4, canvasHeight / 4);
-            VisUtil.drawText(g2d, String.valueOf(model.currentState().length), canvasWidth / 4, canvasHeight / 2);
-            VisUtil.drawText(g2d, String.valueOf(model.currentState()[0].length), canvasWidth * 3 / 4, canvasHeight / 2);
+
+            for (int i = 0; i < model.getRows(); i++) {
+                for (int j = model.getColumns(); j < model.getColumns() * 2; j ++) {
+                    int alpha = (int) (state[i][j] * 255);
+                    g2d.setColor(new Color(0, 0, 139, alpha));
+                    VisUtil.fillRectangle(g2d, j * squareWidth,i * squareHeight, squareWidth, squareHeight);
+                }
+            }
 
 
         }
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(canvasWidth, canvasHeight);
+            Dimension dimension = new Dimension();
+            dimension.setSize(canvasWidth, canvasHeight);
+            return dimension;
         }
     }
 }
