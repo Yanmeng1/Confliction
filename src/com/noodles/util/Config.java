@@ -51,4 +51,6 @@ public class Config {
     /** 每一次暴乱敌对势力诱导因子的增长幅度，每一次镇压政府镇压有效因子敌对势力诱导因子的减小幅度 **/
     public final static double FACTOR_OPPONENT_TRANSFER = 0.05;
 
+
+
 }

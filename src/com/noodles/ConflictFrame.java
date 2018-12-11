@@ -6,6 +6,9 @@ import com.noodles.util.VisUtil;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * created by yanmeng 2018/12/10
+ */
 public class ConflictFrame extends JFrame {
 
     private double canvasWidth;
@@ -51,11 +54,8 @@ public class ConflictFrame extends JFrame {
             hints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             g2d.addRenderingHints(hints);
 
-            /** 模型渲染 **/
-            VisUtil.setStrokeWidth(g2d, 3);
-            VisUtil.setColor(g2d, VisUtil.Blue);
+            /* 模型渲染 */
             double[][] state = model.getCurrentState();
-
             double squareHeight = canvasHeight / model.getRows();
             double squareWidth = canvasWidth / ((model.getColumns() * 2));
 
@@ -64,7 +64,7 @@ public class ConflictFrame extends JFrame {
                     if (state[i][j] < 0) {
                         g2d.setColor(VisUtil.Black);
                     } else {
-                        int alpha = 255;
+                        int alpha;
                         if (state[i][j] < Config.DISSATISFY_THRESHOLD) {
                             double lower2One = state[i][j] / Config.DISSATISFY_THRESHOLD;
                             alpha = (int)((1 - lower2One) * 255);

@@ -7,24 +7,20 @@ import com.noodles.util.Location;
 import java.util.ArrayList;
 
 /**
- * agent主要流程：
- *  1.创建之初初始化财富值
- *  2.加载周围邻居(后期的3.获取不满意程度，4.微观经济影响是基于邻居的)
- *  3.获取不满意程度
- *  4.微观经济影响
- *  5.宏观经济影响
+ * created by yanmeng 2018/12/09
+ * 1. Agent主体:基本属性和动作
+ * 2. Agent动作:相互总用、诱变为激进分子和加载用户属性信息三种动作
  */
 public class Agent implements Cloneable {
 
     private Location location;
     private double asset;
     private double culture;
+    private boolean isRioter;
     private double economicDissatisfy; // [0,1]
     private double cultureDifferent;   // [0,1]
-    private boolean isRioter;
     private Agent[] neighbors;
-
-    /** 在agent.clone()虽然会对neighborsLocation进行浅拷贝，因为位置信息是固定的，所以不会影响结果 **/
+    /* 在agent.clone()虽然会对neighborsLocation进行浅拷贝，因为位置信息是固定的，所以不会影响结果 */
     private Location[] neighborsLocation;
 
     public Agent(Location location) {
@@ -38,25 +34,25 @@ public class Agent implements Cloneable {
         this.isRioter = false;
     }
 
-    /** 作用1 ：局部贫富差距异性 **/
+    /* 作用1 ：局部贫富差距异性 */
     public void microEconomicEffect(Agent[] neighbors) {
 
         for (int i = 0; i < neighbors.length; i ++) {
             double gapAsset = neighbors[i].getAsset() - asset;
             double microAsset = Config.ASSET_TRANSFER_RATE * gapAsset;
             double prob = DataGene.uniform();
-            /** 穷人:小概率从富人那里拿到财富0.3 **/
+            /* 穷人:小概率从富人那里拿到财富0.3 */
             if (gapAsset > 0) {
                 if (prob < Config.ASSET_RICH2POOR_PROBABILITY) {
                     asset += microAsset;
                     neighbors[i].setAsset(neighbors[i].getAsset() - microAsset);
                 } else {
-                    /** 大概率更穷 **/
+                    /* 大概率更穷 */
                     asset -= microAsset;
                     neighbors[i].setAsset(neighbors[i].getAsset() + microAsset);
                 }
             } else {
-                /** 富人:大概率0.7更富 **/
+                /* 富人:大概率0.7更富 */
                 microAsset = -microAsset;
                 if (prob < Config.ASSET_POOR2RICH_PROBABILITY) {
                     asset += microAsset;
@@ -70,13 +66,13 @@ public class Agent implements Cloneable {
         }
     }
 
-    /** 作用2 ：国民经济影响 **/
+    /* 作用2 ：国民经济影响 */
     public void macroEconomicEffect (double GDP) {
         double macroAsset = GDP * asset;
         asset += macroAsset;
     }
 
-    /** 作用3 ： 文化交融 **/
+    /* 作用3 ： 文化交融 */
     public void culturalIntegration() {
         if (Config.CULTURAL_MIDDLE - culture < 0.01) {
             return;
@@ -101,7 +97,7 @@ public class Agent implements Cloneable {
         }
     }
 
-    /** 诱变1 ：局部恐怖势力诱变 **/
+    /* 诱变1 ：局部恐怖势力诱变 -> 基于邻居 */
     public boolean microRioterLure() {
         int rioterNumber = 0;
         for (int i = 0; i < neighbors.length; i ++) {
@@ -110,14 +106,14 @@ public class Agent implements Cloneable {
             }
         }
         double rioterFactor = ((double) rioterNumber) / neighbors.length;
-        /** RIOTER_TRANSFER_THRESHOLD = 70% **/
+        /* RIOTER_TRANSFER_THRESHOLD = 70% */
         if (rioterFactor > Config.RIOTER_TRANSFER_THRESHOLD) {
             isRioter = true;
         }
         return isRioter;
     }
 
-    /** 诱变2 ：不满意度达到阈值，文化差异与敌对势力综合影响激活 opponentFactor 0.2  **/
+    /* 诱变2 ：不满意度达到阈值，文化差异与敌对势力综合影响激活opponentFactor -> 基于自身经济不满意度和文化差异程度，外界敌对势力干扰 */
     public boolean microCulturalLure(double opponentFactor) {
         if (economicDissatisfy > Config.DISSATISFY_THRESHOLD) {
             double cultureLure = cultureDifferent * opponentFactor;
@@ -129,30 +125,7 @@ public class Agent implements Cloneable {
         return isRioter;
     }
 
-    /** 基于邻居，经济差异所造成的不满意度[0,1] **/
-    public void loadEconomicDissatisfy() {
-        int disCount = 0;
-        for (int i = 0; i < neighbors.length; i ++) {
-            if (neighbors[i].getAsset() > asset) {
-                disCount ++;
-            }
-        }
-        economicDissatisfy = ((double) disCount) / neighbors.length;
-    }
-
-    /** 基于邻居，文化差异[0,1] **/
-    public void loadCulturalDifferent() {
-        int difCount = 0;
-        for (int i = 0; i < neighbors.length; i ++) {
-            double cultureDifferent = neighbors[i].getCulture() - culture;
-            if (cultureDifferent < 0) cultureDifferent = - cultureDifferent;
-            if (cultureDifferent > Config.CULTURAL_DIFFERENT_THRESHOLD) {
-                difCount ++;
-            }
-        }
-        cultureDifferent = ((double) difCount) / neighbors.length;
-    }
-
+    /* 加载属性1. 邻居位置 -> 基于全局信息 */
     public void loadNeighborLocation(int rows, int columns) {
         ArrayList<Location> locationList = new ArrayList<>();
         for (Location loc : Location.adjacent) {
@@ -167,6 +140,30 @@ public class Agent implements Cloneable {
         }
         this.neighborsLocation = locationList.toArray(new Location[locationList.size()]);
         this.neighbors = new Agent[locationList.size()];
+    }
+
+    /* 加载属性2. 经济所造成的不满意程度[0,1] -> 基于财产信息 */
+    public void loadEconomicDissatisfy() {
+        int disCount = 0;
+        for (int i = 0; i < neighbors.length; i ++) {
+            if (neighbors[i].getAsset() > asset) {
+                disCount ++;
+            }
+        }
+        economicDissatisfy = ((double) disCount) / neighbors.length;
+    }
+
+    /* 加载属性3. 文化差异[0,1] -> 基于文化信息 */
+    public void loadCulturalDifferent() {
+        int difCount = 0;
+        for (int i = 0; i < neighbors.length; i ++) {
+            double cultureDifferent = neighbors[i].getCulture() - culture;
+            if (cultureDifferent < 0) cultureDifferent = - cultureDifferent;
+            if (cultureDifferent > Config.CULTURAL_DIFFERENT_THRESHOLD) {
+                difCount ++;
+            }
+        }
+        cultureDifferent = ((double) difCount) / neighbors.length;
     }
 
     @Override

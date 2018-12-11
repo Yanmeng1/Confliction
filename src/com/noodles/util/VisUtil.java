@@ -6,10 +6,8 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 
 public class VisUtil {
-
     private VisUtil() {
     }
-
     public static final Color Red = new Color(0xF44336);
     public static final Color Pink = new Color(0xE91E63);
     public static final Color Purple = new Color(0x9C27B0);
